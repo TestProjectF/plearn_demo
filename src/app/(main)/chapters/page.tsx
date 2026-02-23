@@ -1,29 +1,61 @@
-export default async function ChaptersPage() {
-    const res = await fetch(
-        `${process.env.NEXTAUTH_URL}/api/chapters`,
-        { cache: "no-store" }
-    );
+import { prisma } from "@/lib/prisma";
+import Link from "next/link";
 
-    const chapters = await res.json();
+export default async function AdminChaptersPage() {
+    const chapters = await prisma.chapter.findMany({
+        orderBy: { createdAt: "desc" },
+    });
 
     return (
-        <div className="p-10">
-            <h1 className="text-xl font-bold mb-6">
-                Chapters
-            </h1>
+        <div>
+            <div className="flex justify-between mb-6">
+                <h1 className="text-2xl font-bold">
+                    Manage Chapters
+                </h1>
 
-            <div className="space-y-4">
-                {chapters.map((chapter: any) => (
+                <Link
+                    href="/admin/chapters/create"
+                    className="bg-black text-white px-4 py-2 rounded"
+                >
+                    + Create
+                </Link>
+            </div>
+
+            <div className="flex flex-col gap-4">
+                {chapters.map((chapter) => (
                     <div
                         key={chapter.id}
-                        className="border p-4 rounded"
+                        className="border p-4 rounded bg-white shadow flex justify-between"
                     >
-                        <h2 className="font-semibold">
-                            {chapter.title}
-                        </h2>
-                        <p className="text-sm mt-2">
-                            {chapter.content}
-                        </p>
+                        <div>
+                            <h2 className="font-bold">
+                                {chapter.title}
+                            </h2>
+                            <p className="text-gray-600">
+                                {chapter.content}
+                            </p>
+                        </div>
+
+                        <div className="flex gap-3">
+                            <Link
+                                href={`/admin/chapters/${chapter.id}/edit`}
+                                className="text-blue-600"
+                            >
+                                Edit
+                            </Link>
+
+                            <form
+                                action={`/api/chapters/${chapter.id}`}
+                                method="POST"
+                            >
+                                <button
+                                    formMethod="delete"
+                                    className="text-red-600"
+                                >
+                                    Delete
+                                </button>
+                            </form>
+                        </div>
                     </div>
                 ))}
             </div>
