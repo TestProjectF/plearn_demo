@@ -1,37 +1,43 @@
 import { prisma } from "@/lib/prisma";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { NextResponse } from "next/server";
 
+// GET ALL CHAPTERS
 export async function GET() {
-    const session = await getServerSession(authOptions);
+    try {
+        const chapters = await prisma.chapter.findMany({
+            orderBy: { createdAt: "desc" },
+        });
 
-    if (!session) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const chapters = await prisma.chapter.findMany({
-        orderBy: { createdAt: "desc" },
-    });
-
-    return NextResponse.json(chapters);
-}
-
-export async function POST(req: Request) {
-    const session = await getServerSession(authOptions);
-
-    if (!session || session.user.role !== "ADMIN") {
+        return NextResponse.json(chapters);
+    } catch (error) {
         return NextResponse.json(
-            { error: "Forbidden" },
-            { status: 403 }
+            { error: "Failed to fetch chapters" },
+            { status: 500 }
         );
     }
+}
 
-    const { title, content } = await req.json();
+// CREATE CHAPTER
+export async function POST(request: Request) {
+    try {
+        const { title, content } = await request.json();
 
-    const chapter = await prisma.chapter.create({
-        data: { title, content },
-    });
+        if (!title || !content) {
+            return NextResponse.json(
+                { error: "Missing fields" },
+                { status: 400 }
+            );
+        }
 
-    return NextResponse.json(chapter);
+        const chapter = await prisma.chapter.create({
+            data: { title, content },
+        });
+
+        return NextResponse.json(chapter);
+    } catch (error) {
+        return NextResponse.json(
+            { error: "Failed to create chapter" },
+            { status: 500 }
+        );
+    }
 }

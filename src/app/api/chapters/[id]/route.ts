@@ -2,44 +2,30 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
 export async function DELETE(
-    req: Request,
-    { params }: { params: { id: string } }
+    request: Request,
+    context: { params: Promise<{ id: string }> }
 ) {
-    const session = await getServerSession(authOptions);
-
-    if (!session || session.user.role !== "ADMIN") {
-        return NextResponse.json(
-            { error: "Forbidden" },
-            { status: 403 }
-        );
-    }
+    const { id } = await context.params;
 
     await prisma.chapter.delete({
-        where: { id: params.id },
+        where: { id },
     });
 
     return NextResponse.json({ success: true });
 }
 
 export async function PUT(
-    req: Request,
-    { params }: { params: { id: string } }
+    request: Request,
+    context: { params: Promise<{ id: string }> }
 ) {
-    const session = await getServerSession(authOptions);
-
-    if (!session || session.user.role !== "ADMIN") {
-        return NextResponse.json(
-            { error: "Forbidden" },
-            { status: 403 }
-        );
-    }
-
-    const { title, content } = await req.json();
+    const { id } = await context.params;
+    const { title, content } = await request.json();
 
     const chapter = await prisma.chapter.update({
-        where: { id: params.id },
+        where: { id },
         data: { title, content },
     });
 

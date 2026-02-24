@@ -8,11 +8,12 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
+  id        String     @id @default(cuid())
+  email     String     @unique
   password  String
-  role      Role     @default(STUDENT)
-  createdAt DateTime @default(now())
+  role      Role       @default(STUDENT)
+  createdAt DateTime   @default(now())
+  Progress  Progress[]
 }
 
 model Chapter {
@@ -20,6 +21,20 @@ model Chapter {
   title     String
   content   String
   createdAt DateTime @default(now())
+
+  progresses Progress[]
+}
+
+model Progress {
+  id        String   @id @default(cuid())
+  userId    String
+  chapterId String
+  completed Boolean  @default(false)
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  chapter   Chapter  @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, chapterId])
 }
 
 enum Role {
